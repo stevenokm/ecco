@@ -17,6 +17,7 @@ from ecco.lm import LM
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModel, AutoModelForSeq2SeqLM
 from typing import Any, Dict, Optional, List
 from ecco.util import load_config, pack_tokenizer_config
+import torch
 
 
 def from_pretrained(hf_model_id: str,
@@ -71,7 +72,7 @@ def from_pretrained(hf_model_id: str,
     else:
         config = load_config(hf_model_id)
 
-    tokenizer = AutoTokenizer.from_pretrained(hf_model_id)
+    tokenizer = AutoTokenizer.from_pretrained(hf_model_id, padding_side="left")
 
     if config['type'] == 'enc-dec':
         model_cls = AutoModelForSeq2SeqLM
@@ -80,7 +81,8 @@ def from_pretrained(hf_model_id: str,
     else:
         model_cls = AutoModel
 
-    model = model_cls.from_pretrained(hf_model_id, output_hidden_states=hidden_states, output_attentions=attention)
+    model = model_cls.from_pretrained(hf_model_id, output_hidden_states=hidden_states, output_attentions=attention,
+                                      torch_dtype=torch.float16)
 
     lm_kwargs = {
         'model_name': hf_model_id,
